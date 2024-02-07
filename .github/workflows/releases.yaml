@@ -1,0 +1,36 @@
+name: Releases
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v3
+
+      # Add a step here to convert line endings
+      - name: Convert line endings
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dos2unix
+          dos2unix aws-script.sh
+
+      - name: Tag new version
+        id: tagger
+        uses: phish108/autotag-action@v1.1.64
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          bump: minor
+          with-v: true
+          release-branch: main
+
+      - name: Create release on Github
+        uses: ncipollo/release-action@v1
+        with:
+          tag: "v${{ steps.tagger.outputs.new-tag }}"
+          artifacts: aws-script.sh
